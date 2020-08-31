@@ -69,6 +69,13 @@ function ClassCreator.new(pattern, parent)
 			
 			return obj
 		end
+	else
+		--[[
+		Empty constructor
+		]]
+		class.__init = function(self, ...)
+		end
+		meta.__call = class.__init
 	end
 	
 	setmetatable(class, meta)
