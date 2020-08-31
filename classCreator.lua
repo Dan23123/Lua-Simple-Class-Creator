@@ -20,7 +20,6 @@ function ClassCreator.new(pattern, parent)
 	if (pattern.__init) then
 		class.__init = pattern.__init
 		meta.__call = function(self, ...)
-			print("call:", ...)
 			local obj = {base = class} -- "base" property points to class object was created with
 			local objmeta = {}
 			
