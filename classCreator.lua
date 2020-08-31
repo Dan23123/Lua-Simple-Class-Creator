@@ -20,6 +20,7 @@ function ClassCreator.new(pattern, parent)
 	if (pattern.__init) then
 		class.__init = pattern.__init
 		meta.__call = function(self, ...)
+			print("call:", ...)
 			local obj = {base = class} -- "base" property points to class object was created with
 			local objmeta = {}
 			
@@ -32,7 +33,7 @@ function ClassCreator.new(pattern, parent)
 
 						if (type(value) == "function") then
 							obj[idx] = function(...)
-								value(obj, ...)
+								return value(obj, ...)
 							end
 						else
 							obj[idx] = value
@@ -56,7 +57,7 @@ function ClassCreator.new(pattern, parent)
 						]]
 						
 						obj[idx] = function(...)
-							value(obj, ...)
+							return value(obj, ...)
 						end
 					else
 						obj[idx] = value
@@ -65,17 +66,15 @@ function ClassCreator.new(pattern, parent)
 			end
 			
 			setmetatable(obj, objmeta)
+			print("constructor call")
+			print(obj, ...)
 			pattern.__init(obj, ...)
-			
+
 			return obj
 		end
 	else
-		--[[
-		Empty constructor
-		]]
-		class.__init = function(self, ...)
-		end
-		meta.__call = class.__init
+		class.__init = function(...) end
+		meta.__call = function(self, ...) end
 	end
 	
 	setmetatable(class, meta)
