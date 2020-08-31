@@ -66,8 +66,6 @@ function ClassCreator.new(pattern, parent)
 			end
 			
 			setmetatable(obj, objmeta)
-			print("constructor call")
-			print(obj, ...)
 			pattern.__init(obj, ...)
 
 			return obj
