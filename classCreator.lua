@@ -1,81 +1,59 @@
--- Simple class creator
+local tablefind = table.find or function(t, i)
+	local c = 0
+	for _, v in pairs(t) do
+		if v == i then
+			c = c + 1
+		end
+	end
+	return c
+end
 
 local ClassCreator = {}
 
-function ClassCreator.new(pattern, parent)
-	local class = {}
-	local meta = {}
+function new(pattern, modificators, staticproperties)
+	modificators = modificators or {}
+	staticproperties = staticproperties or {}
 	
+	local class = {}
+	local classmeta = {}
+	local constructor = pattern.__init or function() end
 	for idx, value in pairs(pattern) do
 		class[idx] = value
 	end
 	
-	if (parent ~= nil) then
-		pattern.__parent = parent
-		for idx, value in pairs(parent) do
-			class[idx] = value
+	if modificators.constant then
+		classmeta.__newindex = function()
+			error("ERROR: You can't modify this class (constant modificator)")
 		end
 	end
 	
-	if (pattern.__init) then
-		class.__init = pattern.__init
-		meta.__call = function(self, ...)
-			local obj = {base = class} -- "base" property points to class object was created with
-			local objmeta = {}
-			
-			if (parent ~= nil) then
-				for idx, value in pairs(parent) do
-					if (idx ~= "__init") then
-						if (idx:sub(1, 2) == "__") then
-							objmeta[idx] = value
-						end
-
-						if (type(value) == "function") then
-							obj[idx] = function(...)
-								return value(obj, ...)
-							end
-						else
-							obj[idx] = value
-						end
+	classmeta.__call = function(self, ...)
+		local obj = {__base = class}
+		for idx, value in pairs(pattern) do
+			if (idx ~= "__init" and tablefind(staticproperties, idx) == 0) then
+				if (type(value) == "function") then
+					obj[idx] = function(...)
+						return value(obj, ...)
 					end
+				else
+					obj[idx] = value
 				end
 			end
-			
-			for idx, value in pairs(pattern) do
-				if (idx ~= "__init") then
-					if (idx:sub(1, 2) == "__") then
-						objmeta[idx] = value
-					end
-
-					if (type(value) == "function") then
-						--[[
-						Function wrapper.
-						
-						Caller: obj.func()
-						Class: function(self, ...)
-						]]
-						
-						obj[idx] = function(...)
-							return value(obj, ...)
-						end
-					else
-						obj[idx] = value
-					end
-				end
-			end
-			
-			setmetatable(obj, objmeta)
-			pattern.__init(obj, ...)
-
-			return obj
 		end
-	else
-		class.__init = function(...) end
-		meta.__call = function(self, ...) end
+
+		constructor(obj, ...)
+
+		return obj
 	end
-	
-	setmetatable(class, meta)
+
+	setmetatable(class, classmeta)
 	return class
 end
+
+setmetatable(ClassCreator, {
+	__call = function(self, ...)
+		return new(...)
+	end
+})
 
 return ClassCreator
