@@ -1,11 +1,9 @@
 local tablefind = table.find or function(t, i)
-	local c = 0
-	for _, v in pairs(t) do
-		if v == i then
-			c = c + 1
+	for j, v in pairs(t) do
+		if j == i then
+			return v	
 		end
 	end
-	return c
 end
 
 local ClassCreator = {}
@@ -30,7 +28,7 @@ function new(pattern, modificators, staticproperties)
 	classmeta.__call = function(self, ...)
 		local obj = {__base = class}
 		for idx, value in pairs(pattern) do
-			if (idx ~= "__init" and tablefind(staticproperties, idx) == 0) then
+			if (idx ~= "__init" and not tablefind(staticproperties, idx)) then
 				if (type(value) == "function") then
 					obj[idx] = function(...)
 						return value(obj, ...)
